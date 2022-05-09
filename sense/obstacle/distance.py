@@ -6,6 +6,10 @@ from . import VL53L0X
 import cv2
 #import obstacle.VL53L0X as VL53L0X
 
+KP = 0
+KI = 0
+KD = 0
+
 class Order():
     def __init__(self, \
         error_rl=0, error_ud=0, error_qh=0,\
@@ -20,6 +24,18 @@ class Order():
         self.br = beta_r
         self.al = alpha
         self.ga = gamma
+
+    def PID(self, last_e_rl, last_e_ud, last_e_qh):
+        error_sum_rl = self.error_rl + last_e_rl
+        rl = KP * self.error_rl + KI * error_sum_rl + KD * (self.error_rl - last_e_rl)
+        error_sum_ud = self.error_ud + last_e_ud
+        ud = KP * self.error_ud + KI * error_sum_ud + KD * (self.error_ud - last_e_ud)
+        error_sum_qh = self.error_qh + last_e_qh
+        qh = KP * self.error_qh + KI * error_sum_qh + KD * (self.error_qh - last_e_qh)
+        print("rl: ", rl)
+        print("ud: ", ud)
+        print("qh: ", qh)
+
 
 class MyTOF(VL53L0X.VL53L0X):
     def __init__(self):
@@ -42,7 +58,7 @@ class MyTOF(VL53L0X.VL53L0X):
         self.stop_ranging()
 
 EXPECTED_DIST = 10
-def distance_measure(sensor, distance_queue, order_queue):
+def distance_measure(cap, sensor, distance_queue, order_queue):
     while cap.isOpened():
         dist, t = sensor.range()
         # distance_queue.put(dist)
@@ -50,7 +66,7 @@ def distance_measure(sensor, distance_queue, order_queue):
         error_qh = dist - EXPECTED_DIST
         order = Order(error_qh=error_qh)
         order_queue.put(order)
-        if cv2.waitKey(fps) == 27:
+        if cv2.waitKey() == 27:
             break
     cap.release()
     sensor.destroy()

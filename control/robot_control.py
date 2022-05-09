@@ -4,9 +4,9 @@ import cv2
 from . import servoserial
 #from servoserial import ServoSerial
 robot = Robot()
-robot.left_motor.value = 0.8
+#robot.left_motor.value = 0.8
 # 0 - 1.0
-robot.right_motor.value = 0.8
+#robot.right_motor.value = 0.8
 
 
 #from servoserial import ServoSerial
@@ -81,7 +81,7 @@ class Order():
         print("ud: ", ud)
         print("qh: ", qh)
 
-def robot_move(order_queue, robot):
+def robot_move(cap, order_queue, robot):
     last_erl = 0
     last_eud = 0
     last_eqh = 0

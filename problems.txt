@@ -1,0 +1,1 @@
+VIDIOC_DQBUF: Resource temporarily unavailable

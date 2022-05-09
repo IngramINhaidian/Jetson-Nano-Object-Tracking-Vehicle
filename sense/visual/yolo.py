@@ -14,7 +14,7 @@ def set_saved_video(input_video, output_video, size):
     video = cv2.VideoWriter(output_video, fourcc, fps, size)
     return video
 
-def video_capture(frame_queue, darknet_image_queue):
+def video_capture(cap, frame_queue, darknet_image_queue):
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -28,7 +28,7 @@ def video_capture(frame_queue, darknet_image_queue):
         darknet_image_queue.put(img_for_detect)
     cap.release()
 
-def inference(darknet_image_queue, detections_queue, fps_queue):
+def inference(cap, darknet_image_queue, detections_queue, fps_queue):
     while cap.isOpened():
         darknet_image = darknet_image_queue.get()
         prev_time = time.time()
@@ -41,7 +41,7 @@ def inference(darknet_image_queue, detections_queue, fps_queue):
         darknet.free_image(darknet_image)
     cap.release()
 
-def ver_hori_measure(detections_queue, order_queue):
+def ver_hori_measure(cap, detections_queue, order_queue):
     while cap.isOpened():
         dtcts = detections_queue.get()
         for label, confidence, bbox in detections:
@@ -55,7 +55,7 @@ def ver_hori_measure(detections_queue, order_queue):
                 order_queue.put(order)
     cap.release()
 
-def drawing(frame_queue, detections_queue, fps_queue):
+def drawing(cap, frame_queue, detections_queue, fps_queue):
     random.seed(3)  # deterministic bbox colors
     video = set_saved_video(cap, "", (width, height))
     while cap.isOpened():
@@ -65,7 +65,7 @@ def drawing(frame_queue, detections_queue, fps_queue):
         if frame_resized is not None:
             image = darknet.draw_boxes(detections, frame_resized, class_colors)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            if cv2.waitKey(fps) == 27:
+            if cv2.waitKey() == 27:
                 break
     cap.release()
     video.release()
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     darknet_config = {
         "input" : "nvarguscamerasrc ! video/x-raw(memory:NVMM),\
                             width=1280, height=720, format=NV12, \
-                            framerate=30/1 ! nvvidconv filp=method=0 ! \
+                            framerate=30/1 ! nvvidconv filp-method=0 ! \
                             video/x-raw, width=1280, height=720, format=BGRx ! \
                             videoconvert ! video/x-raw, format=BGR ! appsink",
         "config_file" : "yolov4-tiny.cfg",
@@ -99,7 +99,8 @@ if __name__ == "__main__":
     width = darknet.network_width(network)
     height = darknet.network_height(network)
     input_path = darknet_config["input"]
-    cap = cv2.VideoCapture(input_path)
+    #cap = cv2.VideoCapture(input_path)
+    cap = cv2.VideoCapture(0)
     Thread(target=video_capture, args=(frame_queue, darknet_image_queue)).start()
     Thread(target=inference, args=(darknet_image_queue, detections_queue, fps_queue)).start()
     Thread(target=drawing, args=(frame_queue, detections_queue, fps_queue)).start()

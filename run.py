@@ -17,7 +17,7 @@ STD_QH = 0  # 前后
 
 if __name__ == "__main__":
     bot = robot_control.myRobot()
-    tof = distance.my_tof()
+    tof = distance.MyTOF()
 
     
     frame_queue = Queue()
@@ -25,13 +25,10 @@ if __name__ == "__main__":
     detections_queue = Queue(maxsize=1) # same level
     distance_queue = Queue(maxsize=1) # same level
     order_queue = Queue(maxsize=1)
+    fps_queue = Queue(maxsize=1)
 
     darknet_config = {
-        "input" : "nvarguscamerasrc ! video/x-raw(memory:NVMM),\
-                            width=1280, height=720, format=NV12, \
-                            framerate=30/1 ! nvvidconv filp=method=0 ! \
-                            video/x-raw, width=1280, height=720, format=BGRx ! \
-                            videoconvert ! video/x-raw, format=BGR ! appsink",
+        "input" : "nvarguscamerasrc ! video/x-raw(memory:NVMM),width=1280, height=720, format=NV12, framerate=30/1 ! nvvidconv filp=method=0 ! video/x-raw, width=1280, height=720, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink",
         "config_file" : "yolov4-tiny.cfg",
         "data_file"   : "coco.data",
         "weights"     : "yolov4-tiny.weights",
@@ -47,8 +44,8 @@ if __name__ == "__main__":
     width = darknet.network_width(network)
     height = darknet.network_height(network)
     input_path = darknet_config["input"]
-    cap = cv2.VideoCapture(input_path)
-
+    # cap = cv2.VideoCapture(input_path)
+    cap = cv2.VideoCapture(0)
     # 前后 上下左右线程同步
     cdt = Condition()
 
@@ -56,14 +53,14 @@ if __name__ == "__main__":
     # bot.begin_dance()
 
     # start
-    Thread(target=yolo.video_capture, args=(frame_queue, darknet_image_queue)).start()
+    Thread(target=yolo.video_capture, args=(cap, frame_queue, darknet_image_queue)).start()
         # frame_queue -> darknet_image_queue
-    Thread(target=yolo.inference, args=(darknet_image_queue, detections_queue)).start()
+    Thread(target=yolo.inference, args=(cap, darknet_image_queue, detections_queue, fps_queue)).start()
         # darknet_image -> detections_queue
-    Thread(target=distance.distance_measure, args=(tof, distance_queue, order_queue)).start()
+    Thread(target=distance.distance_measure, args=(cap, tof, distance_queue, order_queue)).start()
         # -> distance_queue
-    Thread(target=yolo.ver_hori_measure, args=(detections_queue, order_queue)).start()
+    Thread(target=yolo.ver_hori_measure, args=(cap, detections_queue, order_queue)).start()
         # detections_qeue -> ver_hori_queue
-    Thread(target=robot_control.robot_move, args=(order_queue, bot)).start()
+    Thread(target=robot_control.robot_move, args=(cap, order_queue, bot)).start()
         # 1.distance_queue 2. ver_hori_queue -> order_queue
         # order_queue transform
