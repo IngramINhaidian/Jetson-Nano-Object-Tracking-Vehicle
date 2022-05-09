@@ -25,8 +25,8 @@ from ctypes import *
 import math
 import random
 import os
-
-from servoserial import ServoSerial
+from . import servoserial
+#from servoserial import ServoSerial
 
 class BOX(Structure):
     _fields_ = [("x", c_float),

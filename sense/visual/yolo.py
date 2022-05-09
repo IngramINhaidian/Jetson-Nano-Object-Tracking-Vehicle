@@ -3,7 +3,7 @@ import random
 import os
 import cv2
 import time
-import darknet
+from . import darknet
 import argparse
 from threading import Thread, enumerate
 from queue import Queue
@@ -82,9 +82,9 @@ darknet_config = {
                         framerate=30/1 ! nvvidconv filp=method=0 ! \
                         video/x-raw, width=1280, height=720, format=BGRx ! \
                         videoconvert ! video/x-raw, format=BGR ! appsink",
-    "config_file" : "../../yolov4-tiny.cfg",
-    "data_file"   : "../../coco.data",
-    "weights"     : "../../yolov4-tiny.weights",
+    "config_file" : "yolov4-tiny.cfg",
+    "data_file"   : "coco.data",
+    "weights"     : "yolov4-tiny.weights",
     "thresh"      : .25
 }
 

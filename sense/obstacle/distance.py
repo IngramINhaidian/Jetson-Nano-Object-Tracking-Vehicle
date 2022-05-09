@@ -1,7 +1,9 @@
 # VL53L0X Laser Ranging Sensor (Produced by Yahboom)
 
 import time
-import sense.obstacle.VL53L0X as VL53L0X
+#import VL53L0X
+from . import VL53L0X
+#import obstacle.VL53L0X as VL53L0X
 
 class Order():
     def __init__(self, \
@@ -28,7 +30,7 @@ class MyTOF(VL53L0X.VL53L0X):
         if (timing < 20000):
             timing = 20000
         distance = self.get_distance()
-        return distance, time
+        return distance, timing
 
     # def run(self):
     #     while True:
@@ -53,5 +55,7 @@ if __name__ =="__main__":
     my_tof = MyTOF()
     for i in range(1, 101):
         dist, t = my_tof.range()
+        #time.sleep(0.001)
+        print(dist)
         time.sleep(t / 100000.00)
     my_tof.destroy()

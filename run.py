@@ -3,7 +3,7 @@ from control import servoserial
 from control import robot_control
 from sense.obstacle import distance
 from threading import Thread, enumerate, Condition
-from sense import obstacle
+#from sense import obstacle
 from sense import visual
 from sense.obstacle import distance
 from sense.visual import yolo
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     cdt = Condition()
 
     # test
-    bot.begin_dance()
+    # bot.begin_dance()
 
     # start
     Thread(target=yolo.video_capture, args=(frame_queue, darknet_image_queue)).start()

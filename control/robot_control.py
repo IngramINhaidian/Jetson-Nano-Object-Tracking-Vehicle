@@ -1,16 +1,18 @@
 from jetbot import Robot
 import time
+from . import servoserial
+#from servoserial import ServoSerial
 robot = Robot()
 robot.left_motor.value = 0.8
 # 0 - 1.0
 robot.right_motor.value = 0.8
 
 
-from servoserial import ServoSerial
-servo_device = ServoSerial()
+#from servoserial import ServoSerial
+#servo_device = ServoSerial()
 # 中央位置
-servo_device.Servo_serial_control(1, 2100)
-servo_device.Servo_serial_control(2, 2048)
+#servo_device.Servo_serial_control(1, 2100)
+#servo_device.Servo_serial_control(2, 2048)
 # index = 1 : 左右方向  600 ~ 3600
 # index = 2 : 上下方向  1300 ~ 4095
 
@@ -19,7 +21,7 @@ BEST_MATCH_TIME = 0.05
 class myRobot():
     def __init__(self):
         self.motor = Robot()
-        self.servo = ServoSerial()
+        self.servo = servoserial.ServoSerial()
 
     def forward(self, alpha):
         self.robot.left_motor.value = alpha * 1.0
@@ -85,8 +87,8 @@ def robot_move(order_queue, robot):
     while True:
         ords = order_queue.get()
         ords.PID(last_erl, last_eud, last_eqh)
-        robot.turn(ords.bl, ords.br, ords.al)
-        robot.nod(ords.ga)
+        #robot.turn(ords.bl, ords.br, ords.al)
+        #robot.nod(ords.ga)
         last_erl, last_eud, last_eqh = \
             ords.error_rl,\
             ords.error_ud,\
