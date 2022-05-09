@@ -3,6 +3,7 @@
 import time
 #import VL53L0X
 from . import VL53L0X
+import cv2
 #import obstacle.VL53L0X as VL53L0X
 
 class Order():
@@ -42,13 +43,18 @@ class MyTOF(VL53L0X.VL53L0X):
 
 EXPECTED_DIST = 10
 def distance_measure(sensor, distance_queue, order_queue):
-    while True:
+    while cap.isOpened():
         dist, t = sensor.range()
         # distance_queue.put(dist)
         # time.sleep(t / 100000.00)
         error_qh = dist - EXPECTED_DIST
         order = Order(error_qh=error_qh)
         order_queue.put(order)
+        if cv2.waitKey(fps) == 27:
+            break
+    cap.release()
+    sensor.destroy()
+
 
 
 if __name__ =="__main__":

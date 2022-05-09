@@ -7,6 +7,8 @@ from threading import Thread, enumerate, Condition
 from sense import visual
 from sense.obstacle import distance
 from sense.visual import yolo
+import cv2
+from sense.visual import darknet
 
 
 STD_LR = 0  # 左右
@@ -19,10 +21,33 @@ if __name__ == "__main__":
 
     
     frame_queue = Queue()
-    darknet_image_queue = Queue()
-    detections_queue = Queue() # same level
+    darknet_image_queue = Queue(maxsize=1)
+    detections_queue = Queue(maxsize=1) # same level
     distance_queue = Queue(maxsize=1) # same level
     order_queue = Queue(maxsize=1)
+
+    darknet_config = {
+        "input" : "nvarguscamerasrc ! video/x-raw(memory:NVMM),\
+                            width=1280, height=720, format=NV12, \
+                            framerate=30/1 ! nvvidconv filp=method=0 ! \
+                            video/x-raw, width=1280, height=720, format=BGRx ! \
+                            videoconvert ! video/x-raw, format=BGR ! appsink",
+        "config_file" : "yolov4-tiny.cfg",
+        "data_file"   : "coco.data",
+        "weights"     : "yolov4-tiny.weights",
+        "thresh"      : .25
+    }
+
+    network, class_names, class_colors = darknet.load_network(
+            darknet_config["config_file"],
+            darknet_config["data_file"],
+            darknet_config["weights"],
+            batch_size=1
+        )
+    width = darknet.network_width(network)
+    height = darknet.network_height(network)
+    input_path = darknet_config["input"]
+    cap = cv2.VideoCapture(input_path)
 
     # 前后 上下左右线程同步
     cdt = Condition()

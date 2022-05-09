@@ -1,5 +1,6 @@
 from jetbot import Robot
 import time
+import cv2
 from . import servoserial
 #from servoserial import ServoSerial
 robot = Robot()
@@ -84,7 +85,7 @@ def robot_move(order_queue, robot):
     last_erl = 0
     last_eud = 0
     last_eqh = 0
-    while True:
+    while cap.isOpened():
         ords = order_queue.get()
         ords.PID(last_erl, last_eud, last_eqh)
         #robot.turn(ords.bl, ords.br, ords.al)
@@ -93,3 +94,4 @@ def robot_move(order_queue, robot):
             ords.error_rl,\
             ords.error_ud,\
             ords.error_qh
+    cap.release()
