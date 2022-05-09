@@ -58,14 +58,14 @@ class MyTOF(VL53L0X.VL53L0X):
         self.stop_ranging()
 
 EXPECTED_DIST = 10
-def distance_measure(cap, sensor, distance_queue, order_queue):
+def distance_measure(cap, sensor, distance_queue, pre_order_queue):
     while cap.isOpened():
         dist, t = sensor.range()
         # distance_queue.put(dist)
         # time.sleep(t / 100000.00)
         error_qh = dist - EXPECTED_DIST
         order = Order(error_qh=error_qh)
-        order_queue.put(order)
+        pre_order_queue.put(order)
         if cv2.waitKey() == 27:
             break
     cap.release()

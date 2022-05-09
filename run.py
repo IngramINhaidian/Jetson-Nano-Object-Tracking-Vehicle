@@ -25,6 +25,7 @@ if __name__ == "__main__":
     detections_queue = Queue(maxsize=1) # same level
     distance_queue = Queue(maxsize=1) # same level
     order_queue = Queue(maxsize=1)
+    pre_order_queue = Queue(maxsize=1)
     fps_queue = Queue(maxsize=1)
 
     darknet_config = {
@@ -57,9 +58,9 @@ if __name__ == "__main__":
         # frame_queue -> darknet_image_queue
     Thread(target=yolo.inference, args=(cap, darknet_image_queue, detections_queue, fps_queue)).start()
         # darknet_image -> detections_queue
-    Thread(target=distance.distance_measure, args=(cap, tof, distance_queue, order_queue)).start()
+    Thread(target=distance.distance_measure, args=(cap, tof, distance_queue, pre_order_queue)).start()
         # -> distance_queue
-    Thread(target=yolo.ver_hori_measure, args=(cap, detections_queue, order_queue)).start()
+    Thread(target=yolo.ver_hori_measure, args=(cap, detections_queue, pre_order_queue, order_queue)).start()
         # detections_qeue -> ver_hori_queue
     Thread(target=robot_control.robot_move, args=(cap, order_queue, bot)).start()
         # 1.distance_queue 2. ver_hori_queue -> order_queue

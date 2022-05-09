@@ -41,7 +41,7 @@ def inference(cap, darknet_image_queue, detections_queue, fps_queue):
         darknet.free_image(darknet_image)
     cap.release()
 
-def ver_hori_measure(cap, detections_queue, order_queue):
+def ver_hori_measure(cap, detections_queue, pre_order_queue, order_queue):
     while cap.isOpened():
         dtcts = detections_queue.get()
         for label, confidence, bbox in detections:
@@ -49,7 +49,7 @@ def ver_hori_measure(cap, detections_queue, order_queue):
                 x, y, w, h = bbox
                 error_y = y - 208
                 error_x = x - 208
-                order = order_queue.get()
+                order = pre_order_queue.get()
                 order.error_rl = error_x
                 order.error_ud = error_y
                 order_queue.put(order)
