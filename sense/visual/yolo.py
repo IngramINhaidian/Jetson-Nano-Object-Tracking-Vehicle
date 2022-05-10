@@ -14,6 +14,8 @@ def set_saved_video(input_video, output_video, size):
     video = cv2.VideoWriter(output_video, fourcc, fps, size)
     return video
 
+# put to frame_queue
+# put to darknet_image_queue
 def video_capture(cap, frame_queue, darknet_image_queue):
     width=1280
     height = 780
@@ -24,48 +26,76 @@ def video_capture(cap, frame_queue, darknet_image_queue):
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_resized = cv2.resize(frame_rgb, (width, height),
                                    interpolation=cv2.INTER_LINEAR)
+        print("Stuck useless z")
         if frame_queue.full():
             z = frame_queue.get()
+        print("Stuck frame_queue & video_capture")
         frame_queue.put(frame_resized)
         img_for_detect = darknet.make_image(width, height, 3)
         darknet.copy_image_from_bytes(img_for_detect, frame_resized.tobytes())
+        trash = frame_queue.get()
+        print("Stuck useless y")
         if darknet_image_queue.full():
             y = darknet_image_queue.get()
+        print("Stuck darknet_img_queue & video capture")
         darknet_image_queue.put(img_for_detect)
     cap.release()
 
+
+# get from darknet_image_queue
+# put to detections_queue
+# abandon fps_queue
 def inference(pack, cap, darknet_image_queue, detections_queue, fps_queue):
     while cap.isOpened():
-        darknet_image = darknet_image_queue.get()
-        prev_time = time.time()
-        detections = darknet.detect_image(pack[0], pack[1], darknet_image, thresh=.25)
-        # detections = darknet.detect_image(network, class_names, darknet_image, thresh=darknet_config["thresh"])
-        
-        
-        #detections_queue.put(detections)
-        if detections_queue.full():
-            x = detections_queue.get()
-        detections_queue.put(detections)
-        print("fuck")
-        fps = int(1/(time.time() - prev_time))
-        fps_queue.put(fps)
-        print("FPS: {}".format(fps))
-        darknet.print_detections(detections, True)
-        darknet.free_image(darknet_image)
+        if not darknet_image_queue.empty():
+            darknet_image = darknet_image_queue.get()
+            prev_time = time.time()
+            detections = darknet.detect_image(pack[0], pack[1], darknet_image, thresh=.25)
+            # detections = darknet.detect_image(network, class_names, darknet_image, thresh=darknet_config["thresh"])
+            
+            print("Stck useless x")
+            if detections_queue.full():
+                x = detections_queue.get()
+            print("Stuck detections_queue & inference")
+            detections_queue.put(detections)
+            print("fuck")
+            fps = int(1/(time.time() - prev_time))
+            # fps_queue.put(fps)
+            print("FPS: {}".format(fps))
+            darknet.print_detections(detections, True)
+            darknet.free_image(darknet_image)
+        else:
+            print("darknet_image_queue is always empty!")
     cap.release()
 
+# get from detections_queue
+# get from pre_order_queue
+# put to order_queue
 def ver_hori_measure(cap, detections_queue, pre_order_queue, order_queue):
     while True:
-        detections = detections_queue.get()
-        for label, confidence, bbox in detections:
-            if label == "bottle":
-                x, y, w, h = bbox
-                error_y = y - 208
-                error_x = x - 208
-                order = pre_order_queue.get()
-                order.error_rl = error_x
-                order.error_ud = error_y
-                order_queue.put(order)
+        if not detections_queue.empty():
+            detections = detections_queue.get()
+            for label, confidence, bbox in detections:
+                if label == "bottle":
+                    x, y, w, h = bbox
+                    error_y = y - 208
+                    error_x = x - 208
+                    if not pre_order_queue.empty():
+                        order = pre_order_queue.get()
+                        order.error_rl = error_x
+                        order.error_ud = error_y
+                        print("Stuck order_queue & ver_hori_measure")
+                        order_queue.put(order)
+                    else:
+                        print("pre_order_queue is always empty!")
+                # 让pre_order_queue能及时清空
+                else:
+                    if not pre_order_queue.empty():
+                        trash = pre_order_queue.get()
+                # 避免一瞬间detections获得多个bottle的情况
+                break
+        else:
+            print("detections_queue is always empty!")
     cap.release()
 
 def drawing(cap, frame_queue, detections_queue, fps_queue):

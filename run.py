@@ -19,14 +19,15 @@ if __name__ == "__main__":
     bot = robot_control.myRobot()
     tof = distance.MyTOF()
 
-    
-    frame_queue = Queue(maxsize=5)
-    darknet_image_queue = Queue(maxsize=5)
-    detections_queue = Queue(maxsize=5) # same level
-    distance_queue = Queue(maxsize=5) # same level
-    order_queue = Queue(maxsize=5)
-    pre_order_queue = Queue(maxsize=5)
-    fps_queue = Queue(maxsize=5)
+    # Cannot set maxsize to frame_queue, since no one is "getting" from it.
+    frame_queue = Queue()
+    darknet_image_queue = Queue(maxsize=1)
+    detections_queue = Queue(maxsize=1) # same level
+    distance_queue = Queue(maxsize=1) # same level
+    order_queue = Queue(maxsize=1)
+    pre_order_queue = Queue(maxsize=1)
+    # 不应该设max_size
+    # fps_queue = Queue()
 
     darknet_config = {
         "input" : "nvarguscamerasrc sensor-id=0 ! video/x-raw(memory:NVMM), width=(int)1280, height=720, format=NV12, framerate=30/1 ! nvvidconv filp=method=0 ! video/x-raw, width=1280, height=720, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink",

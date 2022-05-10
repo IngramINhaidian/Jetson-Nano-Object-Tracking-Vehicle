@@ -37,6 +37,7 @@ class Order():
         print("qh: ", qh)
         return [rl, ud, qh]
 
+
 class MyTOF(VL53L0X.VL53L0X):
     def __init__(self):
         super(MyTOF, self).__init__()
@@ -65,20 +66,24 @@ def distance_measure(cap, sensor, distance_queue, pre_order_queue):
         # time.sleep(t / 100000.00)
         error_qh = dist - EXPECTED_DIST
         order = Order(error_qh=error_qh)
-        pre_order_queue.put(order)
-        time.sleep(0.5)
+        print("Stuck pre_order_queue & distance_measure")
+        if not pre_order_queue.full():
+            pre_order_queue.put(order)
+        else:
+            print("unable to put new elements into pre_order_queue")
+        time.sleep(0.01)
         if cv2.waitKey() == 27:
             break
     cap.release()
     sensor.destroy()
 
-def single_distance_measure(sensor, distance_queue, order_queue):
-    while True:
-        dist, t = sensor.range()
-        error_qh = dist - EXPECTED_DIST
+# def single_distance_measure(sensor, distance_queue, order_queue):
+#     while True:
+#         dist, t = sensor.range()
+#         error_qh = dist - EXPECTED_DIST
 
-        order = Order(error_qh=error_qh)
-        order_queue.put(order)
+#         order = Order(error_qh=error_qh)
+#         order_queue.put(order)
 
 
 

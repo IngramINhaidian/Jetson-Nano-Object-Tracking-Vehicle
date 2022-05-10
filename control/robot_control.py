@@ -93,7 +93,8 @@ def robot_move(order_queue, robot):
     last_eqh = 0
 #    while cap.isOpened():
     while True:
-        if order_queue:
+        
+        if not order_queue.empty():
             ords = order_queue.get()
         #if ords:
             rl, ud, qh = ords.PID(last_erl, last_eud, last_eqh)
@@ -104,4 +105,6 @@ def robot_move(order_queue, robot):
                 ords.error_rl,\
                 ords.error_ud,\
                 ords.error_qh
+        else:
+            print("Order_queue is always empty")
 #    cap.release()
