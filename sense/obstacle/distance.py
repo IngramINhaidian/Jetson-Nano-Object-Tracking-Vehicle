@@ -6,9 +6,9 @@ from . import VL53L0X
 import cv2
 #import obstacle.VL53L0X as VL53L0X
 
-KP = 0
-KI = 0
-KD = 0
+KP = 1
+KI = 1
+KD = 1
 
 class Order():
     def __init__(self, \
@@ -35,7 +35,7 @@ class Order():
         print("rl: ", rl)
         print("ud: ", ud)
         print("qh: ", qh)
-
+        return [rl, ud, qh]
 
 class MyTOF(VL53L0X.VL53L0X):
     def __init__(self):
@@ -59,17 +59,26 @@ class MyTOF(VL53L0X.VL53L0X):
 
 EXPECTED_DIST = 10
 def distance_measure(cap, sensor, distance_queue, pre_order_queue):
-    while cap.isOpened():
+    while True:
         dist, t = sensor.range()
         # distance_queue.put(dist)
         # time.sleep(t / 100000.00)
         error_qh = dist - EXPECTED_DIST
         order = Order(error_qh=error_qh)
         pre_order_queue.put(order)
+        time.sleep(0.5)
         if cv2.waitKey() == 27:
             break
     cap.release()
     sensor.destroy()
+
+def single_distance_measure(sensor, distance_queue, order_queue):
+    while True:
+        dist, t = sensor.range()
+        error_qh = dist - EXPECTED_DIST
+
+        order = Order(error_qh=error_qh)
+        order_queue.put(order)
 
 
 

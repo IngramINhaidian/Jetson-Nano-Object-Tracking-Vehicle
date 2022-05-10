@@ -15,25 +15,38 @@ def set_saved_video(input_video, output_video, size):
     return video
 
 def video_capture(cap, frame_queue, darknet_image_queue):
+    width=1280
+    height = 780
     while cap.isOpened():
         ret, frame = cap.read()
-        if not ret:
-            break
+        #if not ret:
+        #    break
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_resized = cv2.resize(frame_rgb, (width, height),
                                    interpolation=cv2.INTER_LINEAR)
+        if frame_queue.full():
+            z = frame_queue.get()
         frame_queue.put(frame_resized)
         img_for_detect = darknet.make_image(width, height, 3)
         darknet.copy_image_from_bytes(img_for_detect, frame_resized.tobytes())
+        if darknet_image_queue.full():
+            y = darknet_image_queue.get()
         darknet_image_queue.put(img_for_detect)
     cap.release()
 
-def inference(cap, darknet_image_queue, detections_queue, fps_queue):
+def inference(pack, cap, darknet_image_queue, detections_queue, fps_queue):
     while cap.isOpened():
         darknet_image = darknet_image_queue.get()
         prev_time = time.time()
-        detections = darknet.detect_image(network, class_names, darknet_image, thresh=darknet_config["thresh"])
+        detections = darknet.detect_image(pack[0], pack[1], darknet_image, thresh=.25)
+        # detections = darknet.detect_image(network, class_names, darknet_image, thresh=darknet_config["thresh"])
+        
+        
+        #detections_queue.put(detections)
+        if detections_queue.full():
+            x = detections_queue.get()
         detections_queue.put(detections)
+        print("fuck")
         fps = int(1/(time.time() - prev_time))
         fps_queue.put(fps)
         print("FPS: {}".format(fps))
@@ -42,8 +55,8 @@ def inference(cap, darknet_image_queue, detections_queue, fps_queue):
     cap.release()
 
 def ver_hori_measure(cap, detections_queue, pre_order_queue, order_queue):
-    while cap.isOpened():
-        dtcts = detections_queue.get()
+    while True:
+        detections = detections_queue.get()
         for label, confidence, bbox in detections:
             if label == "bottle":
                 x, y, w, h = bbox

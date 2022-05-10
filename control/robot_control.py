@@ -25,8 +25,13 @@ class myRobot():
         self.servo = servoserial.ServoSerial()
 
     def forward(self, alpha):
-        self.robot.left_motor.value = alpha * 1.0
-        self.robot.right_motor.value = alpha * 1.0
+        if alpha > 1:
+            alpha = 1.0
+        if alpha < 0:
+            alpha = 0.0
+        print("alpha: ", alpha)
+        #self.motor.left_motor.value = alpha * 1.0
+        #self.motor.right_motor.value = alpha * 1.0
     
     def turn(self, beta_l, beta_r, alpha):
         self.robot.left_motor.value = 1.0 * beta_l * alpha
@@ -51,9 +56,9 @@ class myRobot():
         for i in range(0,50):
             self.turn(i / 100.0, i / 100.0)
 
-KP = 0
-KI = 0
-KD = 0
+KP = 1.0
+KI = 1.0
+KD = 1.0
 
 class Order():
     def __init__(self, \
@@ -80,18 +85,23 @@ class Order():
         print("rl: ", rl)
         print("ud: ", ud)
         print("qh: ", qh)
+        return [rl, ud, qh]
 
-def robot_move(cap, order_queue, robot):
+def robot_move(order_queue, robot):
     last_erl = 0
     last_eud = 0
     last_eqh = 0
-    while cap.isOpened():
-        ords = order_queue.get()
-        ords.PID(last_erl, last_eud, last_eqh)
-        #robot.turn(ords.bl, ords.br, ords.al)
-        #robot.nod(ords.ga)
-        last_erl, last_eud, last_eqh = \
-            ords.error_rl,\
-            ords.error_ud,\
-            ords.error_qh
-    cap.release()
+#    while cap.isOpened():
+    while True:
+        if order_queue:
+            ords = order_queue.get()
+        #if ords:
+            rl, ud, qh = ords.PID(last_erl, last_eud, last_eqh)
+            #robot.forward(qh * ( 1 / 1000 ))
+            #robot.turn(ords.bl, ords.br, ords.al)
+            #robot.nod(ords.ga)
+            last_erl, last_eud, last_eqh = \
+                ords.error_rl,\
+                ords.error_ud,\
+                ords.error_qh
+#    cap.release()
